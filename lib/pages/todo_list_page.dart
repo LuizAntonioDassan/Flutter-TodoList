@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:untitled/models/todo.dart';
+import 'package:untitled/reporsitory/todo_repository.dart';
 
 import '../widgets/todo_list_item.dart';
 
@@ -14,8 +15,20 @@ class TodoListPage extends StatefulWidget {
 
 class _TodoListPageState extends State<TodoListPage> {
   final TextEditingController emailControle = TextEditingController();
+  final TodoRepository todoRepository = TodoRepository();
 
   List<Todo> list = [];
+  
+  @override
+  void initState(){
+    super.initState();
+    
+    todoRepository.getTodoList().then((value){
+      setState(() {
+        list = value;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +63,10 @@ class _TodoListPageState extends State<TodoListPage> {
                       width: 40,
                     ),
                     ElevatedButton(
-                      onPressed: (){
+                      onPressed: () {
                         String text = emailControle.text;
                         setState(() {
-                          if(emailControle.text.isNotEmpty) {
+                          if (emailControle.text.isNotEmpty) {
                             Todo newTodo = Todo(
                                 title: text,
                                 dateTime: DateTime.now()
@@ -61,6 +74,7 @@ class _TodoListPageState extends State<TodoListPage> {
                             list.add(newTodo);
                           }
                           emailControle.clear();
+                          todoRepository.saveTodoList(list);
                         });
                       },
                       style: ElevatedButton.styleFrom(
@@ -87,15 +101,15 @@ class _TodoListPageState extends State<TodoListPage> {
                         )
 
 
-                         /* ListTile(
+                      /* ListTile(
                             title: Text(elemento),
                            textColor: Colors.black87,
                            tileColor: Colors.blueGrey,
-                           *//* subtitle: Text("Até Final de Dezembro ter terminado o Curso."),
-                            leading: Icon(Icons.save, size: 30,),*//*
+                           */ /* subtitle: Text("Até Final de Dezembro ter terminado o Curso."),
+                            leading: Icon(Icons.save, size: 30,),*/ /*
                           ),*/
 
-                     /* Container(
+                      /* Container(
                         color: Colors.red,
                         height: 50,
                       ),
@@ -108,7 +122,7 @@ class _TodoListPageState extends State<TodoListPage> {
                         height: 50,
                       )*/
 
-                   /*   ListTile(
+                      /*   ListTile(
                         title: Text("Tarefa 1"),
                         subtitle: Text("Até Final de Dezembro ter terminado o Curso."),
                         leading: Icon(Icons.save, size: 30,),
@@ -120,10 +134,11 @@ class _TodoListPageState extends State<TodoListPage> {
                 Row(
                   children: [
                     Expanded(
-                        child: Text("Voce possui ${list.length} tarefas pendentes")
+                        child: Text(
+                            "Voce possui ${list.length} tarefas pendentes")
                     ),
                     ElevatedButton(
-                      onPressed: cleanList,
+                      onPressed: cleanListDialog,
                       child: Text("Limpar"),
                     )
                   ],
@@ -137,11 +152,32 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
 
+  void cleanListDialog() {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Limpar tudo?"),
+          content: Text("Tem certeza que deseja apagar todas as tarefas?"),
+          actions: [
+            TextButton(
+                onPressed: cleanList,
+                style: TextButton.styleFrom(primary: Colors.red),
+                child: Text("Limpar")),
+            TextButton(
+                onPressed: () {Navigator.of(context, rootNavigator: true).pop();},
+                child: Text("Cancelar")),
+
+          ],
+        )
+    );
+
+  }
 
   void cleanList(){
     setState(() {
       list.clear();
     });
+    Navigator.of(context, rootNavigator: true).pop();
   }
 
   void login() {
@@ -150,7 +186,7 @@ class _TodoListPageState extends State<TodoListPage> {
     emailControle.clear();
   }
 
-  void onDelete(Todo todo){
+  void onDelete(Todo todo) {
     setState(() {
       list.remove(todo);
     });
